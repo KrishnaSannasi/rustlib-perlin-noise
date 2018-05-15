@@ -1,3 +1,8 @@
+extern crate rand;
+
+mod vector;
+mod noise;
+
 #[cfg(test)]
 mod tests {
     #[test]
