@@ -189,6 +189,14 @@ impl Div<f64> for Vector {
     }
 }
 
+impl Mul<Vector> for f64 {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        &rhs * self
+    }
+}
+
 impl<'a, 'b> Add<&'b Vector> for &'a Vector {
     type Output = Result<Vector, String>;
 
@@ -318,5 +326,13 @@ impl<'a> Div<f64> for &'a Vector {
         }
 
         Vector::from(vec)
+    }
+}
+
+impl<'a> Mul<&'a Vector> for f64 {
+    type Output = Vector;
+
+    fn mul(self, rhs: &'a Vector) -> Self::Output {
+        rhs * self
     }
 }
