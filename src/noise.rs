@@ -7,10 +7,13 @@ fn lerp(v1: &Vector, v2: &Vector, w: f64) -> Result<Vector, String> {
     v1.lerp(v2, w)
 }
 
+/// Normal Perlin Noise is Perlin
+/// Barycentric is as shown in git link
 pub enum NoiseType {
     Perlin, Barycentric
 }
 
+/// struct to handle generating perlin noise
 pub struct PerlinNoise {
     rng: ThreadRng, noise_type: NoiseType,
     grad: Vec<Vec<(Vector, Vector)>>,
@@ -32,10 +35,7 @@ impl PerlinNoise {
 }
 
 impl PerlinNoise {
-
-}
-
-impl PerlinNoise {
+    /// regenerate the random weights
     pub fn regen(&mut self) -> Result<(), String> {
         self.grad = Vec::new();
         self.offsets = Vec::new();
@@ -113,6 +113,7 @@ impl PerlinNoise {
         &self.offsets[ix][iy] + &(dx * &g.0 + dy * &g.1)?
     }
 
+    /// evaluate the noise function at a point
     pub fn eval(&self, x: f64, y: f64) -> Vector {
         // Determine grid cell coordinates
         let x0 = x.floor() as usize;
