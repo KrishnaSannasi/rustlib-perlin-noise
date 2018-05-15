@@ -1,4 +1,3 @@
-use rand::{Rng, ThreadRng, thread_rng};
 use vector::vector::{VectorD, VectorS};
 use std::f64;
 
@@ -15,7 +14,7 @@ pub enum NoiseType {
 
 /// struct to handle generating perlin noise
 pub struct PerlinNoise {
-    rng: ThreadRng, noise_type: NoiseType,
+    noise_type: NoiseType,
     grad: Vec<Vec<VectorD>>,
     offsets: Vec<VectorD>,
     in_dim: usize, out_dim: usize, 
@@ -23,10 +22,9 @@ pub struct PerlinNoise {
 }
 
 impl PerlinNoise {
-    pub fn new(noise_type: NoiseType, in_dim: usize, out_dim: usize, bounds: VectorS) -> Self {
+    pub fn new(noise_type: NoiseType, _in_dim: usize, out_dim: usize, bounds: VectorS) -> Self {
         println!("currently in_dim is not utilized and is force set to 2");
         let mut noise = Self {
-            rng: thread_rng(),
             grad: Vec::new(),
             offsets: Vec::new(),
             in_dim: 2, out_dim,
@@ -39,15 +37,12 @@ impl PerlinNoise {
 
 impl PerlinNoise {
     fn cumulative_bounds(&self) -> Vec<usize> {
-        let mut v = vec![];
+        let mut v = vec![1];
 
         for i in 0..self.bounds.dim() {
-            if i == 0 {
-                v.push(1);
-            } else {
-                let x = *v.last().unwrap();
-                v.push(x * self.bounds[i]);
-            }
+            let x = *v.last().unwrap();
+            let b = self.bounds[i] + 1;
+            v.push(x * b);
         }
 
         v
@@ -57,6 +52,7 @@ impl PerlinNoise {
         VectorS::from(self.cumulative_bounds()).dot(x)
     }
     
+    #[allow(dead_code)]
     fn vectorize(&self, mut p: usize) -> VectorS {
         let mut v = self.cumulative_bounds();
         let mut pos = vec![];
@@ -75,17 +71,15 @@ impl PerlinNoise {
         self.grad = Vec::new();
         self.offsets = Vec::new();
         let origin = VectorD::new(self.out_dim);
-        let last_index = self.cumulative_bounds().pop().unwrap();
+        let last_index = self.cumulative_bounds().pop().unwrap() + 1;
 
-        for x in 0..last_index {
+        for _ in 0..last_index {
             match self.noise_type {
                 NoiseType::Perlin => {
                     let mut t = Vec::new();
                     for _ in 0..self.out_dim {
                         t.push(VectorD::rand(2));
                     }
-                    let mut t0 = VectorD::new(self.out_dim);
-                    let mut t1 = VectorD::new(self.out_dim);
                     let mut tt = Vec::new();
 
                     for j in 0..self.in_dim {
@@ -96,8 +90,8 @@ impl PerlinNoise {
                         tt.push(VectorD::from(v));
                     }
 
-                    self.grad[x] = tt;
-                    self.offsets[x] = origin.clone();
+                    self.grad.push(tt);
+                    self.offsets.push(origin.clone());
                 },
                 NoiseType::Barycentric => {
                     let t = VectorD::rand(self.out_dim);
@@ -130,26 +124,36 @@ impl PerlinNoise {
                     let offset = (&t * center).shift(1.0 / self.out_dim as f64);
                     let t = t * half_width;
 
-                    let dir = VectorD::rand(self.in_dim);
+                    let dir = VectorD::rand(self.out_dim);
                     let mut grad_x = Vec::new();
 
                     for i in 0..self.in_dim {
                         grad_x.push(&t * dir[i])
                     }
                     
-                    self.grad[x] = grad_x;
-                    self.offsets[x] = offset;
+                    self.grad.push(grad_x);
+                    self.offsets.push(offset);
                 }
             }
         }
-
         Ok(())
     }
 
     fn apply_grad(&self, ix: VectorD, x: VectorD) -> Result<VectorD, String> {
         let pos: VectorS = ix.convert(|x| x as usize);
-        let delta = &x - &ix;
-        delta
+        let pos = self.linearize(&pos);
+        let delta = (&x - &ix)?;
+
+        let g = &self.grad[pos];
+        
+        let total = g.iter().enumerate().fold(
+            Ok(VectorD::new(self.out_dim)), 
+            |sum , (i, gi)| {
+                sum? + gi * delta[i]
+            }
+        );
+
+        &self.offsets[pos] + &total?
     }
 
     /*
@@ -173,7 +177,7 @@ impl PerlinNoise {
         // Could also use higher order polynomial/s-curve here
         let  sx = x - x0 as f64;
         let sy = y - y0 as f64;
-    
+        
         // Interpolate between grid point gradients
         let n0 = self.apply_grad(VectorD::from(vec![x0, y0]), VectorD::from(vec![x, y])).unwrap();
         let n1 = self.apply_grad(VectorD::from(vec![x1, y0]), VectorD::from(vec![x, y])).unwrap();
