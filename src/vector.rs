@@ -9,10 +9,12 @@ pub struct Vector {
 
 // related functions
 impl Vector {
+    /// creates a vector of 0.0s with the dimension given
     pub fn new(dim: usize) -> Self {
         Self::from(vec![0.0; dim])
     }
 
+    /// creates a random unit vector with the dimension given
     pub fn rand(dim: usize) -> Self {
         let mut vec = Vec::new();
         let mut rng = thread_rng();
@@ -27,22 +29,28 @@ impl Vector {
 
 // immutable methods
 impl Vector {
+    /// get the dimension of the vector
     pub fn dim(&self) -> usize {
         self.value.len()
     }
 
+    /// the square of the magnitude
     pub fn magsq(&self) -> f64 {
         self.dot(self)
     }
 
+    /// the magnitude
     pub fn mag(&self) -> f64 {
         self.magsq().sqrt()
     }
 
+    /// returns a unit vector with the same 
+    /// direction and dimension as the parent vector
     pub fn norm(&self) -> Self {
         self / self.mag()
     }
 
+    /// sums up the elements of the vector
     pub fn sum(&self) -> f64 {
         let mut sum = 0.0;
         for i in self.value.iter() {
@@ -51,6 +59,7 @@ impl Vector {
         sum
     }
     
+    /// takes the dot product of the two vectors
     pub fn dot(&self, other: &Self) -> f64 {
         let mut dot = 0.0;
         
@@ -61,13 +70,15 @@ impl Vector {
         dot
     }
 
+    /// gives the angle between two vectors
     pub fn angle(&self, other: &Self) -> f64 {
         let y = self.dot(other);
         let x = (self.magsq() * other.magsq()).sqrt();
 
-        y.atan2(x)
+        (y / x).acos()
     }
 
+    /// adds the shift value to all the elements in a vector
     pub fn shift(&self, value: f64) -> Self {
         let mut vec = Vec::new();
 
@@ -78,6 +89,7 @@ impl Vector {
         Self::from(vec)
     }
 
+    /// linearly interpolates between two vectors
     pub fn lerp(&self, other: &Vector, w: f64) -> Result<Self, String> {
         self * (1.0 - w) + other * w
     }
@@ -142,38 +154,6 @@ impl Div<Vector> for Vector {
 
     fn div(self, rhs: Vector) -> Self::Output {
         &self / &rhs
-    }
-}
-
-impl Add<Result<Vector, String>> for Vector {
-    type Output = Result<Vector, String>;
-
-    fn add(self, rhs: Result<Vector, String>) -> Self::Output {
-        self + rhs?
-    }
-}
-
-impl Sub<Result<Vector, String>> for Vector {
-    type Output = Result<Vector, String>;
-
-    fn sub(self, rhs: Result<Vector, String>) -> Self::Output {
-        self + rhs?
-    }
-}
-
-impl Mul<Result<Vector, String>> for Vector {
-    type Output = Result<Vector, String>;
-
-    fn mul(self, rhs: Result<Vector, String>) -> Self::Output {
-        self + rhs?
-    }
-}
-
-impl Div<Result<Vector, String>> for Vector {
-    type Output = Result<Vector, String>;
-
-    fn div(self, rhs: Result<Vector, String>) -> Self::Output {
-        self + rhs?
     }
 }
 
@@ -270,38 +250,6 @@ impl<'a, 'b> Div<&'b Vector> for &'a Vector {
         }
 
         Ok(Vector::from(vec))
-    }
-}
-
-impl<'a, 'b> Add<Result<&'b Vector, String>> for &'a Vector {
-    type Output = Result<Vector, String>;
-
-    fn add(self, rhs: Result<&'b Vector, String>) -> Self::Output {
-        self + rhs?
-    }
-}
-
-impl<'a, 'b> Sub<Result<&'b Vector, String>> for &'a Vector {
-    type Output = Result<Vector, String>;
-
-    fn sub(self, rhs: Result<&'b Vector, String>) -> Self::Output {
-        self + rhs?
-    }
-}
-
-impl<'a, 'b> Mul<Result<&'b Vector, String>> for &'a Vector {
-    type Output = Result<Vector, String>;
-
-    fn mul(self, rhs: Result<&'b Vector, String>) -> Self::Output {
-        self + rhs?
-    }
-}
-
-impl<'a, 'b> Div<Result<&'b Vector, String>> for &'a Vector {
-    type Output = Result<Vector, String>;
-
-    fn div(self, rhs: Result<&'b Vector, String>) -> Self::Output {
-        self + rhs?
     }
 }
 
