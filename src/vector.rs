@@ -1,7 +1,7 @@
-use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{Add, Sub, Mul, Div, Index, IndexMut};
 use rand::{Rng, thread_rng};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vector {
     value: Vec<f64>
 
@@ -92,6 +92,21 @@ impl From<Vec<f64>> for Vector {
             value
         }
     }
+}
+
+impl Index<usize> for Vector {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.value[index]
+    }
+}
+
+impl IndexMut<usize> for Vector {
+    fn index_mut(&mut self, index: usize) -> &mut f64 {
+        &mut self.value[index]
+    }
+
 }
 
 impl Add<Vector> for Vector {
