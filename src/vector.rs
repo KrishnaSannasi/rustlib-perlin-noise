@@ -9,10 +9,8 @@ pub struct Vector {
 
 // related functions
 impl Vector {
-    pub fn new(value: Vec<f64>) -> Self {
-        Self {
-            value
-        }
+    pub fn new(dim: usize) -> Self {
+        Self::from(vec![0.0; dim])
     }
 
     pub fn rand(dim: usize) -> Self {
@@ -23,7 +21,7 @@ impl Vector {
             vec.push(rng.gen());
         }
 
-        Self::new(vec).norm()
+        Self::from(vec).norm()
     }
 }
 
@@ -77,14 +75,22 @@ impl Vector {
             vec.push(i + value);
         }
 
-        Self::new(vec)
+        Self::from(vec)
     }
 }
 
 // traits
 impl<'a> From<&'a [f64]> for Vector {
     fn from(value: &'a [f64]) -> Self {
-        Self::new(Vec::from(value))
+        Self::from(Vec::from(value))
+    }
+}
+
+impl From<Vec<f64>> for Vector {
+    fn from(value: Vec<f64>) -> Self {
+        Self {
+            value
+        }
     }
 }
 
@@ -182,7 +188,7 @@ impl<'a, 'b> Add<&'b Vector> for &'a Vector {
             vec.push(i + j)
         }
 
-        Ok(Vector::new(vec))
+        Ok(Vector::from(vec))
     }
 }
 
@@ -200,7 +206,7 @@ impl<'a, 'b> Sub<&'b Vector> for &'a Vector {
             vec.push(i - j)
         }
 
-        Ok(Vector::new(vec))
+        Ok(Vector::from(vec))
     }
 }
 
@@ -218,7 +224,7 @@ impl<'a, 'b> Mul<&'b Vector> for &'a Vector {
             vec.push(i * j)
         }
 
-        Ok(Vector::new(vec))
+        Ok(Vector::from(vec))
     }
 }
 
@@ -236,7 +242,7 @@ impl<'a, 'b> Div<&'b Vector> for &'a Vector {
             vec.push(i / j)
         }
 
-        Ok(Vector::new(vec))
+        Ok(Vector::from(vec))
     }
 }
 
@@ -282,7 +288,7 @@ impl<'a> Mul<f64> for &'a Vector {
             vec.push(i * rhs)
         }
 
-        Vector::new(vec)
+        Vector::from(vec)
     }
 }
 
@@ -296,6 +302,6 @@ impl<'a> Div<f64> for &'a Vector {
             vec.push(i / rhs)
         }
 
-        Vector::new(vec)
+        Vector::from(vec)
     }
 }
