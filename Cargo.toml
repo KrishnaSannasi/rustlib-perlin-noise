@@ -5,3 +5,4 @@ authors = ["Ozaren <krishna.sd.2012@gmail.com>"]
 
 [dependencies]
 rand = '0.4.2'
+vector = {path = "../vector", version = "*"}

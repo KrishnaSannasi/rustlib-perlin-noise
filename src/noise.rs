@@ -1,8 +1,8 @@
 use rand::{Rng, ThreadRng, thread_rng};
-use vector::Vector;
+use vector::vector::VectorD;
 use std::f64;
 
-fn lerp(v1: &Vector, v2: &Vector, w: f64) -> Result<Vector, String> {
+fn lerp(v1: &VectorD, v2: &VectorD, w: f64) -> Result<VectorD, String> {
     let w = w * w * w * (6.0 * w * w - 15.0 * w + 10.0);
     v1.lerp(v2, w)
 }
@@ -16,8 +16,8 @@ pub enum NoiseType {
 /// struct to handle generating perlin noise
 pub struct PerlinNoise {
     rng: ThreadRng, noise_type: NoiseType,
-    grad: Vec<Vec<(Vector, Vector)>>,
-    offsets: Vec<Vec<Vector>>,
+    grad: Vec<Vec<(VectorD, VectorD)>>,
+    offsets: Vec<Vec<VectorD>>,
     dim: usize, width: usize, height: usize
 }
 
@@ -39,7 +39,7 @@ impl PerlinNoise {
     pub fn regen(&mut self) -> Result<(), String> {
         self.grad = Vec::new();
         self.offsets = Vec::new();
-        let origin = Vector::new(self.dim);
+        let origin = VectorD::new(self.dim);
 
         for x in 0..self.width+1 {
             self.grad.push(Vec::new());
@@ -49,10 +49,10 @@ impl PerlinNoise {
                     NoiseType::Perlin => {
                         let mut t = Vec::new();
                         for _ in 0..self.dim {
-                            t.push(Vector::rand(2));
+                            t.push(VectorD::rand(2));
                         }
-                        let mut t0 = Vector::new(self.dim);
-                        let mut t1 = Vector::new(self.dim);
+                        let mut t0 = VectorD::new(self.dim);
+                        let mut t1 = VectorD::new(self.dim);
 
                         for i in 0..self.dim {
                             t0[i] = t[i][0];
@@ -63,7 +63,7 @@ impl PerlinNoise {
                         self.offsets[x][y] = origin.clone();
                     },
                     NoiseType::Barycentric => {
-                        let t = Vector::rand(self.dim);
+                        let t = VectorD::rand(self.dim);
 
                         let mut max_l = f64::INFINITY;
                         let mut min_l = f64::NEG_INFINITY;
@@ -83,21 +83,21 @@ impl PerlinNoise {
                             }
                         }
                         if max_l < min_l {
-                            return Err(format!("invalid vectors"));
+                            return Err(format!("invalid VectorDs"));
                         }
                         // Given min_l and max_l, we compute how to 
                         // scale and offset the gradient so that the range
                         // matches min_l and max_l
                         let center = (min_l + max_l) / 2.0;
                         let half_width = (max_l - min_l) / 2.0;
-                        let offset = (center * &t).shift(1.0 / self.dim as f64);
+                        let offset = (&t * center).shift(1.0 / self.dim as f64);
                         let t = t * half_width;
 
                         // Same as BARYCENTRIC_VARIANT
                         let angle = self.rng.gen::<f64>() * 2.0 * f64::consts::PI;
                         let s = angle.sin();
                         let c = angle.cos();
-                        self.grad[x][y] = (s * &t, c * &t);
+                        self.grad[x][y] = (&t * s, &t * c);
                         self.offsets[x][y] = offset;
                     }
                 }
@@ -106,15 +106,15 @@ impl PerlinNoise {
         Ok(())
     }
 
-    fn apply_grad(&self, ix: usize, iy: usize, x: f64, y: f64) -> Result<Vector, String> {
+    fn apply_grad(&self, ix: usize, iy: usize, x: f64, y: f64) -> Result<VectorD, String> {
         let (dx, dy) = (x - ix as f64, y - iy as f64);
         let (dx, dy) = (dx as f64, dy as f64);
         let g = &self.grad[ix][iy];
-        &self.offsets[ix][iy] + &(dx * &g.0 + dy * &g.1)?
+        &self.offsets[ix][iy] + &(&g.0 * dx + &g.1 * dy)?
     }
 
     /// evaluate the noise function at a point
-    pub fn eval(&self, x: f64, y: f64) -> Vector {
+    pub fn eval(&self, x: f64, y: f64) -> VectorD {
         // Determine grid cell coordinates
         let x0 = x.floor() as usize;
         let x1 = x0 + 1;

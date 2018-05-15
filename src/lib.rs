@@ -6,8 +6,8 @@
  */
 
 extern crate rand;
+extern crate vector;
 
-mod vector;
 mod noise;
 
 #[cfg(test)]
