@@ -1,3 +1,10 @@
+/**
+ * Author: Krishna Sannasi
+ * 
+ * Credits:
+ * this is a rust implementation of https://github.com/BorisTheBrave/barycentric-perlin-noise/blob/master/perlin.ts
+ */
+
 extern crate rand;
 
 mod vector;
