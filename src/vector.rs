@@ -77,6 +77,10 @@ impl Vector {
 
         Self::from(vec)
     }
+
+    pub fn lerp(&self, other: &Vector, w: f64) -> Result<Self, String> {
+        self * (1.0 - w) + other * w
+    }
 }
 
 // traits
