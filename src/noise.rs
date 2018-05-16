@@ -1,4 +1,5 @@
-use vector::vector::{VectorD, VectorS};
+use rand::{Rng, Rand, thread_rng};
+use linear_algebra::vector::{VectorD, VectorS};
 use std::f64;
 
 fn lerp(v1: &VectorD, v2: &VectorD, w: f64) -> Result<VectorD, String> {
@@ -22,7 +23,7 @@ pub struct PerlinNoise {
 }
 
 impl PerlinNoise {
-    pub fn new(noise_type: NoiseType, _in_dim: usize, out_dim: usize, bounds: VectorS) -> Self {
+    pub fn new(noise_type: NoiseType, _in_dim: usize, out_dim: usize, bounds: VectorS) -> Result<Self, String> {
         println!("currently in_dim is not utilized and is force set to 2");
         let mut noise = Self {
             grad: Vec::new(),
@@ -30,8 +31,8 @@ impl PerlinNoise {
             in_dim: 2, out_dim,
             noise_type, bounds
         };
-        let _ = noise.regen();
-        noise
+        noise.regen()?;
+        Ok(noise)
     }
 }
 
@@ -66,6 +67,29 @@ impl PerlinNoise {
         VectorS::from(pos)
     }
 
+    fn random_bary_vec(&self) -> VectorD {
+        let mut rng = thread_rng();
+        let n = self.out_dim;
+
+        loop {
+            let mut v: Vec<f64> = Vec::new();
+            let mut sum = 0.0;
+
+            for _ in 0..n-1 {
+                let x = rng.gen::<f64>() * 2.0 - 1.0;
+                v.push(x);
+                sum += x;
+            }
+
+            v.push(-sum);
+            let v = VectorD::from(v);
+            if v.magsq() <= 1.0 {
+                return VectorD::from(v).norm();
+            }
+        }
+    }
+
+
     /// regenerate the random weights
     pub fn regen(&mut self) -> Result<(), String> {
         self.grad = Vec::new();
@@ -94,7 +118,7 @@ impl PerlinNoise {
                     self.offsets.push(origin.clone());
                 },
                 NoiseType::Barycentric => {
-                    let t = VectorD::rand(self.out_dim);
+                    let t = self.random_bary_vec();
 
                     let mut max_l = f64::INFINITY;
                     let mut min_l = f64::NEG_INFINITY;
@@ -124,7 +148,7 @@ impl PerlinNoise {
                     let offset = (&t * center).shift(1.0 / self.out_dim as f64);
                     let t = t * half_width;
 
-                    let dir = VectorD::rand(self.out_dim);
+                    let dir = VectorD::rand(self.in_dim);
                     let mut grad_x = Vec::new();
 
                     for i in 0..self.in_dim {
@@ -136,6 +160,7 @@ impl PerlinNoise {
                 }
             }
         }
+
         Ok(())
     }
 
@@ -152,7 +177,7 @@ impl PerlinNoise {
                 sum? + gi * delta[i]
             }
         );
-
+        
         &self.offsets[pos] + &total?
     }
 
