@@ -1,3 +1,4 @@
+#![feature(try_from, specialization)]
 /**
  * Author: Krishna Sannasi
  * 
@@ -5,8 +6,8 @@
  * this is a rust implementation of https://github.com/BorisTheBrave/barycentric-perlin-noise/blob/master/perlin.ts
  */
 
-#[macro_use]
 extern crate linear_algebra;
+extern crate typenum;
 extern crate rand;
 extern crate num;
 
