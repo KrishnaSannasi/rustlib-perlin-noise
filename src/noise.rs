@@ -31,6 +31,15 @@ where T: Float + Debug + Vectorizable {
     v1.lerp(v2, w)
 }
 
+fn isneg<T>(x: T) -> usize
+where T: Float {
+    if x != T::zero() && x.is_sign_negative() {
+        1
+    } else {
+        0
+    }
+}
+
 /// Normal Perlin Noise is Perlin
 /// Barycentric is as shown in git link
 pub enum NoiseType {
@@ -43,8 +52,9 @@ pub enum Range {
 }
 
 /// struct to handle generating perlin noise
-pub struct PerlinNoise<T, I: Unsigned + NonZero, O: Unsigned + NonZero>
-    where T: Copy + Clone + Rand + Float + Vectorizable {
+pub struct PerlinNoise<T: Copy + Rand + Vectorizable + Float + Debug,
+                       I: Unsigned + NonZero,
+                       O: Unsigned + NonZero> {
     noise_type: NoiseType,
     grad: Vec<Vec<Vector<T, O>>>,
     offsets: Vec<Vector<T, O>>,
@@ -53,8 +63,9 @@ pub struct PerlinNoise<T, I: Unsigned + NonZero, O: Unsigned + NonZero>
     zero: T, one: T, two: T
 }
 
-impl<T, I: Unsigned + NonZero, O: Unsigned + NonZero> PerlinNoise<T, I, O>
-    where T: Copy + Clone + Rand + Float + Debug + Vectorizable {
+impl<T: Copy + Rand + Vectorizable + Float + Debug,
+     I: Unsigned + NonZero,
+     O: Unsigned + NonZero> PerlinNoise<T, I, O> {
     pub fn new(noise_type: NoiseType, bounds: Vector<usize, I>, mode: Mode, range: Range) -> Result<Self, String> {
         let mut noise = Self {
             grad: Vec::new(),
@@ -68,17 +79,9 @@ impl<T, I: Unsigned + NonZero, O: Unsigned + NonZero> PerlinNoise<T, I, O>
     }
 }
 
-fn isneg<T>(x: T) -> usize
-where T: Float {
-    if x != T::zero() && x.is_sign_negative() {
-        1
-    } else {
-        0
-    }
-}
-
-impl<T, I: Unsigned + NonZero, O: Unsigned + NonZero> PerlinNoise<T, I, O>
-    where T: Copy + Clone + Rand + Float + Debug + Vectorizable {
+impl<T: Copy + Rand + Vectorizable + Float + Debug,
+     I: Unsigned + NonZero,
+     O: Unsigned + NonZero> PerlinNoise<T, I, O> {
     pub fn bounds(&self) -> &Vector<usize, I> {
         &self.bounds
     }
