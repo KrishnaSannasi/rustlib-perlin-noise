@@ -7,4 +7,4 @@ authors = ["Ozaren <krishna.sd.2012@gmail.com>"]
 rand = "*"
 num = "*"
 typenum = "*"
-linear-algebra = {path = "../linalg", version = "0.7.2", features = ['sized']}
+linear-algebra = {path = "../linalg", version = "0.7.4", features = ['sized']}

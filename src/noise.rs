@@ -3,7 +3,7 @@ use std::f64;
 use num::traits::*;
 use rand::{Rng, Rand, thread_rng};
 use linear_algebra::vector_sized::{Vector, Vectorizable};
-use typenum::Unsigned;
+use typenum::{Unsigned, NonZero};
 use std::convert::TryFrom;
 
 #[derive(Clone, Copy)]
@@ -43,7 +43,7 @@ pub enum Range {
 }
 
 /// struct to handle generating perlin noise
-pub struct PerlinNoise<T, I: Unsigned, O: Unsigned>
+pub struct PerlinNoise<T, I: Unsigned + NonZero, O: Unsigned + NonZero>
     where T: Copy + Clone + Rand + Float + Vectorizable {
     noise_type: NoiseType,
     grad: Vec<Vec<Vector<T, O>>>,
@@ -53,7 +53,7 @@ pub struct PerlinNoise<T, I: Unsigned, O: Unsigned>
     zero: T, one: T, two: T
 }
 
-impl<T, I: Unsigned, O: Unsigned> PerlinNoise<T, I, O>
+impl<T, I: Unsigned + NonZero, O: Unsigned + NonZero> PerlinNoise<T, I, O>
     where T: Copy + Clone + Rand + Float + Debug + Vectorizable {
     pub fn new(noise_type: NoiseType, bounds: Vector<usize, I>, mode: Mode, range: Range) -> Result<Self, String> {
         let mut noise = Self {
@@ -77,7 +77,7 @@ where T: Float {
     }
 }
 
-impl<T, I: Unsigned, O: Unsigned> PerlinNoise<T, I, O>
+impl<T, I: Unsigned + NonZero, O: Unsigned + NonZero> PerlinNoise<T, I, O>
     where T: Copy + Clone + Rand + Float + Debug + Vectorizable {
     pub fn bounds(&self) -> &Vector<usize, I> {
         &self.bounds
