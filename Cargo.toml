@@ -7,4 +7,4 @@ authors = ["Ozaren <krishna.sd.2012@gmail.com>"]
 rand = "*"
 num = "*"
 typenum = "*"
-linear-algebra = { git = "https://github.com/KrishnaSannasi/rustlib-linalg.git", version = "0.7.4", features = ['sized'] }
+linear-algebra = { git = "https://github.com/KrishnaSannasi/rustlib-linalg.git", version = "0.7.6", features = ['sized'] }
