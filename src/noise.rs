@@ -2,8 +2,8 @@ use std::f64;
 
 use num::traits::*;
 use rand::{Rng, Rand, thread_rng};
-use linear_algebra::vector_sized::{Vector, Vectorizable};
-use typenum::{Unsigned, NonZero};
+use linear_algebra::{InVector, vector_sized::{Vector, generic_array::ArrayLength}};
+use typenum::NonZero;
 use std::convert::TryFrom;
 
 #[derive(Clone, Copy)]
@@ -22,8 +22,8 @@ macro_rules! ifdebug {
 
 use std::fmt::Debug;
 
-fn lerp<T, S: Unsigned>(v1: &Vector<T, S>, v2: &Vector<T, S>, w: T) -> Vector<T, S>
-where T: Float + Debug + Vectorizable {
+fn lerp<T, S: ArrayLength<T>>(v1: &Vector<T, S>, v2: &Vector<T, S>, w: T) -> Vector<T, S>
+where T: Float + Debug + InVector {
     let a = T::from(6.0).unwrap();
     let b = T::from(15.0).unwrap();
     let c = T::from(10.0).unwrap();
@@ -52,9 +52,9 @@ pub enum Range {
 }
 
 /// struct to handle generating perlin noise
-pub struct PerlinNoise<T: Copy + Rand + Vectorizable + Float + Debug,
-                       I: Unsigned + NonZero,
-                       O: Unsigned + NonZero> {
+pub struct PerlinNoise<T: Copy + Rand + InVector + Float + Debug,
+                       I: ArrayLength<usize> + NonZero,
+                       O: ArrayLength<T> + NonZero> {
     noise_type: NoiseType,
     grad: Vec<Vec<Vector<T, O>>>,
     offsets: Vec<Vector<T, O>>,
@@ -63,9 +63,9 @@ pub struct PerlinNoise<T: Copy + Rand + Vectorizable + Float + Debug,
     zero: T, one: T, two: T
 }
 
-impl<T: Copy + Rand + Vectorizable + Float + Debug,
-     I: Unsigned + NonZero,
-     O: Unsigned + NonZero> PerlinNoise<T, I, O> {
+impl<T: Copy + Rand + InVector + Float + Debug,
+     I: ArrayLength<usize> + ArrayLength<T> + NonZero,
+     O: ArrayLength<T> + NonZero> PerlinNoise<T, I, O> {
     pub fn new(noise_type: NoiseType, bounds: Vector<usize, I>, mode: Mode, range: Range) -> Result<Self, String> {
         let mut noise = Self {
             grad: Vec::new(),
@@ -79,20 +79,20 @@ impl<T: Copy + Rand + Vectorizable + Float + Debug,
     }
 }
 
-impl<T: Copy + Rand + Vectorizable + Float + Debug,
-     I: Unsigned + NonZero,
-     O: Unsigned + NonZero> PerlinNoise<T, I, O> {
+impl<T: Copy + Rand + InVector + Float + Debug,
+     I: ArrayLength<usize> + ArrayLength<T> + NonZero,
+     O: ArrayLength<T> + NonZero> PerlinNoise<T, I, O> {
     pub fn bounds(&self) -> &Vector<usize, I> {
         &self.bounds
     }
 
     pub fn in_bounds(&self, v: &Vector<T, I>) -> bool {
-        if v.map(|&x| isneg(x)).sum() > 0 {
+        if v.map_ref(|&x| isneg(x)).sum() > 0 {
             false
         } else {
-            let a = &self.bounds.map(|&x| T::from(x).unwrap()) - v;
+            let a = &self.bounds.map_ref(|&x| T::from(x).unwrap()) - v;
 
-            a.map(|&x| isneg(x)).sum() == 0
+            a.map_ref(|&x| isneg(x)).sum() == 0
         }
     }
 
@@ -233,7 +233,7 @@ impl<T: Copy + Rand + Vectorizable + Float + Debug,
     }
 
     fn apply_grad(&self, ix: &Vector<T, I>, x: &Vector<T, I>) -> Vector<T, O> {
-        let pos = ix.map(|x| match x.to_usize() {
+        let pos = ix.map_ref(|x| match x.to_usize() {
             Some(val) => val,
             None => {
                 panic!("out of bounds exception: input is negative")
@@ -276,7 +276,7 @@ impl<T: Copy + Rand + Vectorizable + Float + Debug,
     pub fn eval(&self, v: &Vector<T, I>) -> Result<Vector<T, O>, String> {
         if self.in_bounds(v) {
             let mut del = Vector::new();
-            let eval = self.eval_rec(&v, &v.map(|&x| x.floor()), &mut del, v.dim());
+            let eval = self.eval_rec(&v, &v.map_ref(|&x| x.floor()), &mut del, v.dim());
             Ok(match self.range {
                 Range::Pos => eval.shift(self.two.recip()),
                 Range::PosNeg => eval * self.two
